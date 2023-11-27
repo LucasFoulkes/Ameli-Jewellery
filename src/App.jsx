@@ -1,9 +1,16 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useControls } from 'leva';
 import { Canvas } from '@react-three/fiber';
 import { Center, Environment, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import './App.css';
+
+const shapeConfig = {
+  cornerRadius: { value: 50, min: 0, max: 100 },
+  width: { value: 2, min: 0.1, max: 10 },
+  height: { value: 1, min: 0.1, max: 10 },
+  ellipseRadius: { value: 2.2, min: 0, max: 10 }
+};
 
 function createShapeGeometry(cornerRadius, width, height, ellipseRadius) {
   const smallestDimension = Math.min(width, height);
@@ -26,34 +33,24 @@ function createShapeGeometry(cornerRadius, width, height, ellipseRadius) {
   const extrudePath = new THREE.CatmullRomCurve3(pathPoints.map(p => new THREE.Vector3(p.x, p.y, 0)), true);
   return new THREE.ExtrudeGeometry(shape, { steps: 360, bevelEnabled: false, extrudePath });
 }
-
 const CustomShape = React.memo(({ cornerRadius, width, height, ellipseRadius, material }) => {
   const geometry = useMemo(() => createShapeGeometry(cornerRadius, width, height, ellipseRadius), [cornerRadius, width, height, ellipseRadius]);
   return <Center><mesh geometry={geometry} material={material} castShadow receiveShadow /></Center>;
 });
 
-function useCustomMaterial() {
+export default function App() {
+  const { cornerRadius, width, height, ellipseRadius } = useControls('Shape', shapeConfig);
   const { color, roughness, metalness } = useControls('Material', {
     color: '#ffda5e',
     roughness: { value: 0.1, min: 0, max: 1 },
     metalness: { value: 1, min: 0, max: 1 }
   });
-  return useMemo(() => new THREE.MeshStandardMaterial({ color, roughness, metalness }), [color, roughness, metalness]);
-}
 
-export default function App() {
-  const { cornerRadius, width, height, ellipseRadius } = useControls('Geometry', {
-    cornerRadius: { value: 50, min: 0, max: 100 },
-    width: { value: 2, min: 0.1, max: 10 },
-    height: { value: 1, min: 0.1, max: 10 },
-    ellipseRadius: { value: 2.2, min: 0, max: 10 }
-  });
-
-  const customMaterial = useCustomMaterial();
+  const customMaterial = useMemo(() => new THREE.MeshStandardMaterial({ color, roughness, metalness }), [color, roughness, metalness]);
 
   return (
     <Canvas shadows camera={{ position: [0, 10, 10], fov: 35 }}>
-      <CustomShape {...{ cornerRadius, width, height, ellipseRadius, material: customMaterial }} />
+      <CustomShape cornerRadius={cornerRadius} width={width} height={height} ellipseRadius={ellipseRadius} material={customMaterial} />
       <Environment preset="dawn" background blur={0.35} />
       <OrbitControls autoRotate autoRotateSpeed={0.5} />
     </Canvas>
