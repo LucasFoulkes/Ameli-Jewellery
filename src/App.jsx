@@ -6,26 +6,28 @@ import * as THREE from 'three';
 import './App.css';
 
 const shapeConfig = {
-  cornerRadius: { value: 50, min: 0, max: 100 },
+  topCornerRadius: { value: 50, min: 0, max: 100 },
+  bottomCornerRadius: { value: 50, min: 0, max: 100 },
   width: { value: 2, min: 0.1, max: 10 },
   height: { value: 1, min: 0.1, max: 10 },
   ellipseRadius: { value: 2.2, min: 0, max: 10 }
 };
 
-function createShapeGeometry(cornerRadius, width, height, ellipseRadius) {
+function createShapeGeometry(topCornerRadius, bottomCornerRadius, width, height, ellipseRadius) {
   const smallestDimension = Math.min(width, height);
-  const actualCornerRadius = smallestDimension / 2 * Math.min(cornerRadius, 100) / 100;
+  const actualTopCornerRadius = smallestDimension / 2 * Math.min(topCornerRadius, 100) / 100;
+  const actualBottomCornerRadius = smallestDimension / 2 * Math.min(bottomCornerRadius, 100) / 100;
 
   const shape = new THREE.Shape();
-  shape.moveTo(actualCornerRadius, -height);
-  shape.lineTo(width - actualCornerRadius, -height);
-  shape.absarc(width - actualCornerRadius, -height + actualCornerRadius, actualCornerRadius, -Math.PI / 2, 0, false);
-  shape.lineTo(width, -actualCornerRadius);
-  shape.absarc(width - actualCornerRadius, -actualCornerRadius, actualCornerRadius, 0, Math.PI / 2, false);
-  shape.lineTo(actualCornerRadius, 0);
-  shape.absarc(actualCornerRadius, -actualCornerRadius, actualCornerRadius, Math.PI / 2, Math.PI, false);
-  shape.lineTo(0, -height + actualCornerRadius);
-  shape.absarc(actualCornerRadius, -height + actualCornerRadius, actualCornerRadius, Math.PI, 3 * Math.PI / 2, false);
+  shape.moveTo(actualBottomCornerRadius, -height);
+  shape.lineTo(width - actualBottomCornerRadius, -height);
+  shape.absarc(width - actualBottomCornerRadius, -height + actualBottomCornerRadius, actualBottomCornerRadius, -Math.PI / 2, 0, false);
+  shape.lineTo(width, -actualTopCornerRadius);
+  shape.absarc(width - actualTopCornerRadius, -actualTopCornerRadius, actualTopCornerRadius, 0, Math.PI / 2, false);
+  shape.lineTo(actualTopCornerRadius, 0);
+  shape.absarc(actualTopCornerRadius, -actualTopCornerRadius, actualTopCornerRadius, Math.PI / 2, Math.PI, false);
+  shape.lineTo(0, -height + actualBottomCornerRadius);
+  shape.absarc(actualBottomCornerRadius, -height + actualBottomCornerRadius, actualBottomCornerRadius, Math.PI, 3 * Math.PI / 2, false);
   shape.closePath();
 
   const ellipseCurve = new THREE.EllipseCurve(0, 0, ellipseRadius, ellipseRadius);
@@ -33,13 +35,14 @@ function createShapeGeometry(cornerRadius, width, height, ellipseRadius) {
   const extrudePath = new THREE.CatmullRomCurve3(pathPoints.map(p => new THREE.Vector3(p.x, p.y, 0)), true);
   return new THREE.ExtrudeGeometry(shape, { steps: 360, bevelEnabled: false, extrudePath });
 }
-const CustomShape = React.memo(({ cornerRadius, width, height, ellipseRadius, material }) => {
-  const geometry = useMemo(() => createShapeGeometry(cornerRadius, width, height, ellipseRadius), [cornerRadius, width, height, ellipseRadius]);
+
+const CustomShape = React.memo(({ topCornerRadius, bottomCornerRadius, width, height, ellipseRadius, material }) => {
+  const geometry = useMemo(() => createShapeGeometry(topCornerRadius, bottomCornerRadius, width, height, ellipseRadius), [topCornerRadius, bottomCornerRadius, width, height, ellipseRadius]);
   return <Center><mesh geometry={geometry} material={material} castShadow receiveShadow /></Center>;
 });
 
 export default function App() {
-  const { cornerRadius, width, height, ellipseRadius } = useControls('Shape', shapeConfig);
+  const { topCornerRadius, bottomCornerRadius, width, height, ellipseRadius } = useControls('Shape', shapeConfig);
   const { color, roughness, metalness } = useControls('Material', {
     color: '#ffda5e',
     roughness: { value: 0.1, min: 0, max: 1 },
@@ -50,7 +53,7 @@ export default function App() {
 
   return (
     <Canvas shadows camera={{ position: [0, 10, 10], fov: 35 }}>
-      <CustomShape cornerRadius={cornerRadius} width={width} height={height} ellipseRadius={ellipseRadius} material={customMaterial} />
+      <CustomShape topCornerRadius={topCornerRadius} bottomCornerRadius={bottomCornerRadius} width={width} height={height} ellipseRadius={ellipseRadius} material={customMaterial} />
       <Environment preset="dawn" background blur={0.35} />
       <OrbitControls autoRotate autoRotateSpeed={0.5} />
     </Canvas>
